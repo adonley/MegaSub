@@ -1,4 +1,12 @@
-<h1>{{title}}</h1>
-<p>I ban, therefore I am.</p>
-<a href="https://id.twitch.tv/oauth2/authorize?response_type=code&client_id={{clientId}}&redirect_uri={{serverUrl}}/auth/twitch/callback&scope=channel_subscriptions">Login with Twitch</a>
+<div class="container">
 
+    <form class="form-signin">
+        <h2 class="form-signin-heading">Register your MegaSub</h2>
+        <label for="twitch-id" class="sr-only">Twitch Username</label>
+        <input type="text" id="twitch-id" class="form-control" placeholder="Twitch Username" required autofocus>
+        <label for="steam-64" class="sr-only">Steam 64 ID</label>
+        <input type="text" id="steam-64" class="form-control" placeholder="Steam 64 ID" required>
+        <button class="btn btn-lg btn-primary btn-block" type="submit">Register</button>
+    </form>
+
+</div>
