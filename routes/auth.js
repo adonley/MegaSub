@@ -1,13 +1,9 @@
 const express = require('express');
 const axios = require('axios');
 const cron = require('node-cron');
+const consts = require('../lib/consts');
 
 const router = express.Router();
-
-const clientId = "ate5fi3vinjjn6msz3tp9gc8xf40ss";
-const clientSecret = "qv5pydieropeasma9yfvqicoac830s";
-const redirectUrl = "http://localhost:3000/auth/twitch/callback";
-const title  = "MegaDonger";
 
 let clients = [];
 
@@ -16,7 +12,7 @@ cron.schedule('* * * * *', () => {
     // Refresh loop for access tokens
     for(let i = 0; i < clients.length; i ++) {
         const refreshUrl = "https://id.twitch.tv/oauth2/token?grant_type=refresh_token&refresh_token="
-            + clients[i].refreshToken + "&client_id=" + clientId + "&client_secret=" + clientSecret;
+            + clients[i].refreshToken + "&client_id=" + consts.clientId + "&client_secret=" + consts.clientSecret;
         // Update the refreshtokens that need it
         clients[i].expiresIn = clients[i].expiresIn - 60;
         if(clients[i].expiresIn < 130) {
@@ -32,7 +28,7 @@ cron.schedule('* * * * *', () => {
     }
 });
 
-cron.schedule('* * * * * *', () => {
+function getSubscribers() {
     let subscriptions = [];
     for(let i = 0; i < clients.length; i ++) {
         let current = -1;
@@ -48,6 +44,7 @@ cron.schedule('* * * * * *', () => {
                 }
             }).then((response) => {
                 // TODO: Needs to be tested with someone that has a subscription program
+                // TODO: Check headers for throttling from twitch
                 total = response.data._total;
                 if(total > current + 100) current += 100;
                 // Add the subscription to the subscriptions list
@@ -55,18 +52,24 @@ cron.schedule('* * * * * *', () => {
                     subscriptions.push(subscription);
                 });
             }).catch((err) => {
-                console.error(err);
+                console.log("Failed to get subscribers for user: " + clients[i].username + ", maybe this user doesn't have a sub button?");
+                console.log("Removing from twitch list");
+                clients.splice(i, 1);
             });
         }
     }
+}
+
+cron.schedule('* * * * * *', () => {
+    getSubscribers();
 });
 
 
 // Logs into twitch and saves the oauth information
 router.get('/twitch/callback', function(req, res, next) {
     const code = req.query.code;
-    const twitchUrl = "https://id.twitch.tv/oauth2/token?client_id=" + clientId + "&client_secret=" + clientSecret +
-        "&code=" + code + "&grant_type=authorization_code&redirect_uri=" + redirectUrl;
+    const twitchUrl = "https://id.twitch.tv/oauth2/token?client_id=" + consts.clientId + "&client_secret=" + consts.clientSecret +
+        "&code=" + code + "&grant_type=authorization_code&redirect_uri=" + consts.redirectUrl;
     axios.post(twitchUrl, {}).then((response) => {
         const accessToken = response.data.access_token;
         const expiresIn = response.data.expires_in;
@@ -86,12 +89,18 @@ router.get('/twitch/callback', function(req, res, next) {
                 'username': r.data.token.user_name,
                 'userId': r.data.token.user_id
             };
+
+            // Get the subscribers
+            getSubscribers();
+
+            // Push it to the client list to scan every few mins
             clients.push(client);
-            res.render('admin', { title: title });
+
+            res.render('admin', { title: consts.title });
         });
     }).catch((err) => {
         console.log("Failed to log in with twitch");
-        res.render('index', { title: title });
+        res.render('index', { title: consts.title, serverUrl: consts.serverUrl, clientId: consts.clientId });
     });
 });
 
