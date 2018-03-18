@@ -15,7 +15,9 @@
     "morgan": "~1.9.0",
     "node-cron": "^1.2.1",
     "serve-favicon": "~2.4.5",
+    "sqlite3": "^4.0.0",
     "steam-user": "^3.25.2",
+    "ws": "^5.0.0",
     "yargs": "^11.0.0"
   }
 }

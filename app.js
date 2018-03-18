@@ -16,7 +16,6 @@ var auth = require('./routes/auth');
 var app = express();
 
 
-
 function printUsage() {
     console.log("Usage:");
     console.log("\tnode server --username=steamUsername --password=steamPassword");
