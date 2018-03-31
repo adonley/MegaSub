@@ -1,4 +1,4 @@
-MegaDonger
+MegaSub
 ---
 Add/Remove megasubs to bulldog's friends list automatically.
 
